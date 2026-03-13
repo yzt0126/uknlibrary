@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>作品牆｜未來畫境之AI創作大賽</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="nav"></div>
+  <main class="wall-stage">
+    <div class="wall-card">
+      <div class="wall-image"><img id="wallImg" alt="作品展示"></div>
+      <div class="wall-caption">
+        <div>
+          <div class="small">作品展示牆</div>
+          <h2 id="wallTitle" style="margin:6px 0 8px"></h2>
+          <div id="wallDesc" class="subtitle" style="margin:0"></div>
+        </div>
+        <div class="status ok" id="wallIndex">0 / 0</div>
+      </div>
+    </div>
+  </main>
+  <script src="app.js"></script>
+  <script>
+    document.getElementById('nav').innerHTML = APP.nav('wall');
+    APP.setEventTitle();
+
+    let list = [];
+    let idx = 0;
+    async function init() {
+      list = await APP.getAllArtworks();
+      if (!list.length) {
+        document.getElementById('wallTitle').textContent = '目前尚無作品';
+        document.getElementById('wallDesc').textContent = '請先到作品管理頁新增作品。';
+        return;
+      }
+      showOne();
+      setInterval(next, APP.getSettings().wallSeconds * 1000);
+    }
+    function showOne() {
+      const item = list[idx];
+      document.getElementById('wallImg').src = item.image;
+      document.getElementById('wallTitle').textContent = item.title + (item.author ? `｜${item.author}` : '');
+      document.getElementById('wallDesc').textContent = item.description || '尚無作品說明';
+      document.getElementById('wallIndex').textContent = `${idx + 1} / ${list.length}`;
+    }
+    function next() {
+      if (!list.length) return;
+      idx = (idx + 1) % list.length;
+      showOne();
+    }
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>管理入口｜未來畫境之AI創作大賽</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="nav"></div>
+  <main class="container">
+    <section class="hero">
+      <div class="hero-grid">
+        <div class="panel">
+          <div class="status warn">● 工作人員專用</div>
+          <h1 class="title-xl">管理入口</h1>
+          <p class="subtitle">管理者登入後，才能看到並操作作品管理與後台統計。未登入前不會顯示相關按鈕與內容。</p>
+          <div class="badges">
+            <span class="badge">作品管理</span>
+            <span class="badge">投票統計</span>
+            <span class="badge">排行榜匯出</span>
+            <span class="badge">JSON 備份</span>
+          </div>
+        </div>
+        <div class="panel soft" id="authBox">
+          <h2 class="section-title">管理員登入</h2>
+          <input class="input" id="adminPin" type="password" placeholder="請輸入管理密碼，預設為 123456" />
+          <div class="actions" style="margin-top:14px">
+            <button class="btn btn-primary" id="authBtn">登入管理端</button>
+          </div>
+          <div class="small" style="margin-top:10px">登入成功後，才會顯示「作品管理」與「後台統計」分頁。</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="adminArea" class="hidden">
+      <div class="panel" style="margin-bottom:18px">
+        <div class="actions" style="justify-content:space-between; align-items:center">
+          <div>
+            <div class="status ok">● 已登入管理端</div>
+            <div class="small" style="margin-top:8px">你現在可以切換管理功能，未登入者不會看到這些操作。</div>
+          </div>
+          <div class="actions">
+            <button class="btn btn-secondary" id="tabManageBtn">作品管理</button>
+            <button class="btn btn-secondary" id="tabStatsBtn">後台統計</button>
+            <button class="btn btn-danger" id="logoutBtn">登出</button>
+          </div>
+        </div>
+      </div>
+
+      <section id="manageTab">
+        <div class="grid-2">
+          <div class="panel">
+            <h2 class="section-title">新增作品</h2>
+            <div class="form-row">
+              <div><input class="input" id="title" placeholder="作品名稱" /></div>
+              <div><input class="input" id="author" placeholder="作者 / 參賽者（可選）" /></div>
+            </div>
+            <div style="margin-top:12px">
+              <textarea id="description" placeholder="作品理念說明"></textarea>
+            </div>
+            <div style="margin-top:12px">
+              <input class="input" id="imageFile" type="file" accept="image/*" />
+              <div class="small" style="margin-top:8px">可直接選擇本機圖片。提醒：此 HTML 版資料儲存在同一台裝置的瀏覽器中。</div>
+            </div>
+            <div id="previewBox" class="panel soft" style="margin-top:16px; padding:14px">
+              <div class="small">預覽</div>
+              <div class="card-media" style="margin-top:10px; border-radius:16px; overflow:hidden"><img id="previewImg" alt="預覽" /></div>
+            </div>
+            <div class="actions" style="margin-top:16px">
+              <button class="btn btn-primary" id="addBtn">新增作品</button>
+              <button class="btn btn-secondary" id="resetBtn">清空欄位</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2 class="section-title">系統設定與資料工具</h2>
+            <div class="form-row">
+              <div><input class="input" id="eventName" placeholder="活動名稱" /></div>
+              <div><input class="input" id="newPin" type="password" placeholder="新的管理密碼" /></div>
+            </div>
+            <div class="form-row" style="margin-top:12px">
+              <div>
+                <label class="small">作品牆輪播秒數</label>
+                <input class="input" id="wallSeconds" type="number" min="3" max="30" />
+              </div>
+              <div>
+                <label class="small">是否顯示排行榜</label>
+                <select class="select" id="showRanking">
+                  <option value="true">顯示</option>
+                  <option value="false">隱藏</option>
+                </select>
+              </div>
+            </div>
+            <div class="actions" style="margin-top:16px">
+              <button class="btn btn-primary" id="saveSettingsBtn">儲存設定</button>
+              <button class="btn btn-secondary" id="exportJsonBtn">匯出作品 JSON</button>
+              <label class="btn btn-ghost" for="importJson">匯入作品 JSON</label>
+              <input id="importJson" type="file" accept="application/json" class="hidden" />
+            </div>
+            <div class="hr"></div>
+            <div class="note">若要管理約 100 張以上作品，建議以同一台工作電腦維護資料，或之後再接 Firebase / 後端資料庫。</div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:18px">
+          <div class="actions" style="justify-content:space-between; align-items:center">
+            <h2 class="section-title" style="margin:0">已上傳作品</h2>
+            <div class="small">可用上下移動調整展示位置</div>
+          </div>
+          <div id="artworkList" class="rank-list"></div>
+        </div>
+      </section>
+
+      <section id="statsTab" class="hidden">
+        <div class="panel" style="margin-bottom:18px">
+          <div class="status warn">● 僅管理者可查看</div>
+          <h2 class="section-title" style="margin-top:12px">投票統計後台</h2>
+          <p class="subtitle">可查看作品數、投票筆數、投票人數、前 10 名與完整投票紀錄，並匯出 CSV 報表。</p>
+          <div id="stats" class="kpis"></div>
+        </div>
+
+        <div class="grid-2">
+          <div class="panel">
+            <div class="actions" style="justify-content:space-between; align-items:center">
+              <h2 class="section-title" style="margin:0">前 10 名</h2>
+              <button class="btn btn-secondary" id="exportRankBtn">匯出排行榜 CSV</button>
+            </div>
+            <div id="topRank" class="rank-list"></div>
+          </div>
+          <div class="panel">
+            <div class="actions" style="justify-content:space-between; align-items:center">
+              <h2 class="section-title" style="margin:0">投票紀錄</h2>
+              <button class="btn btn-secondary" id="exportVotesBtn">匯出投票 CSV</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Email</th>
+                    <th>作品</th>
+                    <th>創意</th>
+                    <th>技術</th>
+                    <th>整體</th>
+                    <th>理念</th>
+                    <th>總分</th>
+                    <th>時間</th>
+                  </tr>
+                </thead>
+                <tbody id="voteTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+  <footer>管理頁僅作為 HTML 靜態版示範，未連接雲端主機或資料庫。</footer>
+
+  <script src="app.js"></script>
+  <script>
+    document.getElementById('nav').innerHTML = APP.nav('admin');
+    APP.setEventTitle();
+
+    let authed = APP.isAdminAuthed();
+    let previewData = '';
+    let currentTab = sessionStorage.getItem('ai_vote_admin_tab') || 'manage';
+
+    function renderSettings() {
+      const s = APP.getSettings();
+      document.getElementById('eventName').value = s.eventName;
+      document.getElementById('wallSeconds').value = s.wallSeconds;
+      document.getElementById('showRanking').value = String(s.showRanking);
+    }
+
+    function setTab(tab) {
+      currentTab = tab;
+      sessionStorage.setItem('ai_vote_admin_tab', tab);
+      document.getElementById('manageTab').classList.toggle('hidden', tab !== 'manage');
+      document.getElementById('statsTab').classList.toggle('hidden', tab !== 'stats');
+      document.getElementById('tabManageBtn').classList.toggle('btn-primary', tab === 'manage');
+      document.getElementById('tabManageBtn').classList.toggle('btn-secondary', tab !== 'manage');
+      document.getElementById('tabStatsBtn').classList.toggle('btn-primary', tab === 'stats');
+      document.getElementById('tabStatsBtn').classList.toggle('btn-secondary', tab !== 'stats');
+      if (tab === 'stats') renderDashboard();
+    }
+
+    function updateAuthView() {
+      document.getElementById('authBox').classList.toggle('hidden', authed);
+      document.getElementById('adminArea').classList.toggle('hidden', !authed);
+      if (authed) {
+        renderSettings();
+        renderList();
+        setTab(currentTab);
+      }
+    }
+
+    async function readFileAsDataURL(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    document.getElementById('imageFile').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      previewData = await readFileAsDataURL(file);
+      document.getElementById('previewImg').src = previewData;
+    });
+
+    document.getElementById('authBtn').addEventListener('click', () => {
+      const pin = document.getElementById('adminPin').value;
+      if (pin !== APP.getSettings().adminPin) {
+        APP.toast('管理密碼不正確', 'error');
+        return;
+      }
+      authed = true;
+      sessionStorage.setItem('ai_vote_admin_ok', '1');
+      APP.toast('已進入管理端');
+      updateAuthView();
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      sessionStorage.removeItem('ai_vote_admin_ok');
+      sessionStorage.removeItem('ai_vote_admin_tab');
+      authed = false;
+      currentTab = 'manage';
+      document.getElementById('adminPin').value = '';
+      APP.toast('已登出管理端');
+      updateAuthView();
+    });
+
+    document.getElementById('tabManageBtn').addEventListener('click', () => setTab('manage'));
+    document.getElementById('tabStatsBtn').addEventListener('click', () => setTab('stats'));
+
+    document.getElementById('addBtn').addEventListener('click', async () => {
+      const title = document.getElementById('title').value.trim();
+      const author = document.getElementById('author').value.trim();
+      const description = document.getElementById('description').value.trim();
+      if (!title || !previewData) {
+        APP.toast('請至少填寫作品名稱並選擇圖片', 'error');
+        return;
+      }
+      await APP.addArtwork({ title, author, description, image: previewData });
+      APP.toast('作品新增成功');
+      document.getElementById('title').value = '';
+      document.getElementById('author').value = '';
+      document.getElementById('description').value = '';
+      document.getElementById('imageFile').value = '';
+      document.getElementById('previewImg').src = '';
+      previewData = '';
+      renderList();
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      document.getElementById('title').value = '';
+      document.getElementById('author').value = '';
+      document.getElementById('description').value = '';
+      document.getElementById('imageFile').value = '';
+      document.getElementById('previewImg').src = '';
+      previewData = '';
+    });
+
+    document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+      const next = {
+        eventName: document.getElementById('eventName').value.trim() || '未來畫境之AI創作大賽',
+        wallSeconds: Number(document.getElementById('wallSeconds').value || 6),
+        showRanking: document.getElementById('showRanking').value === 'true',
+      };
+      const newPin = document.getElementById('newPin').value.trim();
+      if (newPin) next.adminPin = newPin;
+      APP.saveSettings(next);
+      APP.setEventTitle();
+      APP.toast('設定已儲存');
+    });
+
+    async function renderList() {
+      const list = await APP.getAllArtworks();
+      const root = document.getElementById('artworkList');
+      if (!list.length) {
+        root.innerHTML = '<div class="empty">目前尚未建立作品。</div>';
+        return;
+      }
+      root.innerHTML = list.map((item, idx) => `
+        <div class="rank-item">
+          <div class="rank-no">${idx + 1}</div>
+          <img class="thumb" src="${item.image}" alt="${APP.escapeHtml(item.title)}">
+          <div>
+            <input class="input" value="${APP.escapeHtml(item.title)}" onchange="editArtwork('${item.id}','title',this.value)">
+            <div class="form-row" style="margin-top:10px">
+              <input class="input" value="${APP.escapeHtml(item.author || '')}" placeholder="作者" onchange="editArtwork('${item.id}','author',this.value)">
+              <div class="small" style="display:flex; align-items:center">更新時間：${APP.formatDate(item.updatedAt)}</div>
+            </div>
+            <textarea onchange="editArtwork('${item.id}','description',this.value)">${APP.escapeHtml(item.description || '')}</textarea>
+          </div>
+          <div class="actions" style="flex-direction:column">
+            <button class="btn btn-secondary" onclick="moveArtwork('${item.id}', -1)">上移</button>
+            <button class="btn btn-secondary" onclick="moveArtwork('${item.id}', 1)">下移</button>
+            <button class="btn btn-danger" onclick="removeArtwork('${item.id}')">刪除</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function moveArtwork(id, step) {
+      const list = await APP.getAllArtworks();
+      const idx = list.findIndex(x => x.id === id);
+      const target = idx + step;
+      if (idx < 0 || target < 0 || target >= list.length) return;
+      const ids = list.map(x => x.id);
+      [ids[idx], ids[target]] = [ids[target], ids[idx]];
+      await APP.reorderArtworks(ids);
+      renderList();
+    }
+    window.moveArtwork = moveArtwork;
+
+    async function removeArtwork(id) {
+      if (!confirm('確定要刪除此作品嗎？')) return;
+      await APP.deleteArtwork(id);
+      const remaining = await APP.getAllArtworks();
+      await APP.reorderArtworks(remaining.map(x => x.id));
+      APP.toast('作品已刪除');
+      renderList();
+      if (currentTab === 'stats') renderDashboard();
+    }
+    window.removeArtwork = removeArtwork;
+
+    async function editArtwork(id, field, value) {
+      await APP.updateArtwork(id, { [field]: value });
+      APP.toast('已儲存修改');
+      if (currentTab === 'stats') renderDashboard();
+    }
+    window.editArtwork = editArtwork;
+
+    document.getElementById('exportJsonBtn').addEventListener('click', async () => {
+      const list = await APP.getAllArtworks();
+      const blob = new Blob([JSON.stringify(list, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'artworks-backup.json';
+      a.click();
+    });
+
+    document.getElementById('importJson').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if (!Array.isArray(data)) {
+        APP.toast('JSON 格式不正確', 'error');
+        return;
+      }
+      for (const item of data) {
+        await APP.addArtwork({
+          title: item.title || '未命名作品',
+          author: item.author || '',
+          description: item.description || '',
+          image: item.image || ''
+        });
+      }
+      APP.toast('匯入完成');
+      renderList();
+    });
+
+    async function renderDashboard() {
+      const data = await APP.getDashboardData();
+      const stats = data.stats;
+      document.getElementById('stats').innerHTML = `
+        <div class="kpi"><div class="small">作品數</div><div class="n">${stats.artworkCount}</div></div>
+        <div class="kpi"><div class="small">投票筆數</div><div class="n">${stats.voteCount}</div></div>
+        <div class="kpi"><div class="small">投票人數</div><div class="n">${stats.voterCount}</div></div>
+      `;
+
+      document.getElementById('topRank').innerHTML = data.ranking.slice(0,10).map((item, idx) => `
+        <div class="rank-item">
+          <div class="rank-no">${idx+1}</div>
+          <img class="thumb" src="${item.image}" alt="${APP.escapeHtml(item.title)}">
+          <div>
+            <h3 style="margin:0 0 8px">${APP.escapeHtml(item.title)}</h3>
+            <div class="small">票數：${item.voteCount}</div>
+          </div>
+          <div class="center"><div class="small">平均</div><div style="font-size:28px; font-weight:900">${item.average || 0}</div></div>
+        </div>
+      `).join('') || '<div class="empty">尚無排名資料</div>';
+
+      const artworkMap = new Map(data.artworks.map(x => [x.id, x]));
+      document.getElementById('voteTable').innerHTML = data.votes.map(v => `
+        <tr>
+          <td>${APP.escapeHtml(v.email)}</td>
+          <td>${APP.escapeHtml(artworkMap.get(v.artworkId)?.title || '已刪除作品')}</td>
+          <td>${v.creative}</td>
+          <td>${v.technical}</td>
+          <td>${v.overall}</td>
+          <td>${v.concept}</td>
+          <td>${v.total}</td>
+          <td>${APP.formatDate(v.votedAt)}</td>
+        </tr>
+      `).join('') || '<tr><td colspan="8" class="center">尚無投票紀錄</td></tr>';
+
+      document.getElementById('exportRankBtn').onclick = () => {
+        APP.exportCSV([
+          ['名次','作品','作者','平均總分','票數','創意平均','技術平均','整體平均','理念平均'],
+          ...data.ranking.map((r, i) => [i+1, r.title, r.author || '', r.average, r.voteCount, r.creativeAvg, r.technicalAvg, r.overallAvg, r.conceptAvg])
+        ], 'ranking-report.csv');
+      };
+
+      document.getElementById('exportVotesBtn').onclick = () => {
+        APP.exportCSV([
+          ['Email','作品','創意','技術','整體','理念','總分','投票時間'],
+          ...data.votes.map(v => [v.email, artworkMap.get(v.artworkId)?.title || '已刪除作品', v.creative, v.technical, v.overall, v.concept, v.total, APP.formatDate(v.votedAt)])
+        ], 'vote-records.csv');
+      };
+    }
+
+    updateAuthView();
+  </script>
+</body>
+</html>

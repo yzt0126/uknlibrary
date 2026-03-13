@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>排行榜｜未來畫境之AI創作大賽</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="nav"></div>
+  <main class="container">
+    <section class="hero">
+      <div class="panel">
+        <div class="status ok">● 即時排名</div>
+        <h1 class="title-xl">作品排行榜</h1>
+        <p class="subtitle">依平均總分排序，同分時優先票數較多的作品。每件作品滿分 40 分。</p>
+      </div>
+    </section>
+    <section>
+      <div id="rankingRoot" class="rank-list"></div>
+    </section>
+  </main>
+  <footer>排行榜資料來自目前瀏覽器中的投票紀錄。</footer>
+
+  <script src="app.js"></script>
+  <script>
+    document.getElementById('nav').innerHTML = APP.nav('ranking');
+    APP.setEventTitle();
+
+    async function render() {
+      const settings = APP.getSettings();
+      const root = document.getElementById('rankingRoot');
+      if (!settings.showRanking) {
+        root.innerHTML = '<div class="panel empty">主辦單位目前未開放排行榜顯示。</div>';
+        return;
+      }
+      const list = await APP.getRanking();
+      if (!list.length) {
+        root.innerHTML = '<div class="panel empty">目前尚無作品資料。</div>';
+        return;
+      }
+      root.innerHTML = list.map((item, idx) => `
+        <div class="rank-item">
+          <div class="rank-no">${idx + 1}</div>
+          <img class="thumb" src="${item.image}" alt="${APP.escapeHtml(item.title)}">
+          <div>
+            <h3 style="margin:0 0 8px">${APP.escapeHtml(item.title)}</h3>
+            <div class="meta">${item.author ? `<span>作者：${APP.escapeHtml(item.author)}</span>` : ''}<span>票數：${item.voteCount}</span></div>
+            <div class="small" style="margin-top:8px">創意 ${item.creativeAvg}｜技術 ${item.technicalAvg}｜整體 ${item.overallAvg}｜理念 ${item.conceptAvg}</div>
+          </div>
+          <div class="center">
+            <div class="small">平均總分</div>
+            <div style="font-size:32px; font-weight:900">${item.average || 0}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+    render();
+  </script>
+</body>
+</html>

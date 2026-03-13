@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>未來畫境之AI創作大賽｜投票系統</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="nav"></div>
+  <main class="container">
+    <section class="hero">
+      <div class="hero-grid">
+        <div class="panel">
+          <div class="status ok">● 活動頁面</div>
+          <h1 class="title-xl"><span data-event-name></span></h1>
+          <p class="subtitle">
+            歡迎參與 AI 創作票選。每位投票者需使用 Email 登入，同一個 Email 對同一件作品只能投票一次。每件作品皆以四個指標進行 10 分制評分。
+          </p>
+          <div class="badges">
+            <span class="badge">創意與主題契合度</span>
+            <span class="badge">技術與編輯能力</span>
+            <span class="badge">整體表現</span>
+            <span class="badge">理念說明</span>
+          </div>
+          <div class="kpis" id="heroStats"></div>
+        </div>
+        <div class="panel soft">
+          <h2 class="section-title">Email 登入投票</h2>
+          <div class="form-row">
+            <div>
+              <input class="input" id="email" type="email" placeholder="請輸入 Email，例如 library@example.com" />
+            </div>
+            <div>
+              <button class="btn btn-primary" id="loginBtn">登入並開始評分</button>
+            </div>
+          </div>
+          <div class="hr"></div>
+          <div id="loginState" class="note">尚未登入。登入後即可開始投票。</div>
+          <div class="actions" style="margin-top:14px">
+            <button class="btn btn-secondary" id="clearLoginBtn">清除目前登入</button>
+            <a class="btn btn-ghost" href="ranking.html">查看排行榜</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="actions" style="justify-content:space-between; margin-bottom:16px; align-items:center">
+        <h2 class="section-title" style="margin:0">參賽作品</h2>
+        <div class="small">建議先登入，再逐件評分。</div>
+      </div>
+      <div class="gallery" id="gallery"></div>
+    </section>
+  </main>
+  <footer>此版本為可直接開啟的 HTML 前端系統，資料儲存在目前瀏覽器裝置中。</footer>
+
+  <script src="app.js"></script>
+  <script>
+    const nav = document.getElementById('nav');
+    nav.innerHTML = APP.nav('vote');
+    APP.setEventTitle();
+
+    const state = {
+      email: localStorage.getItem('ai_vote_current_email') || ''
+    };
+
+    function updateLoginState() {
+      const box = document.getElementById('loginState');
+      const emailInput = document.getElementById('email');
+      emailInput.value = state.email;
+      if (state.email) {
+        box.className = 'note';
+        box.textContent = `目前登入：${state.email}`;
+      } else {
+        box.className = 'note';
+        box.textContent = '尚未登入。登入後即可開始投票。';
+      }
+    }
+
+    async function renderStats() {
+      const data = await APP.getDashboardData();
+      document.getElementById('heroStats').innerHTML = `
+        <div class="kpi"><div class="small">作品數</div><div class="n">${data.stats.artworkCount}</div></div>
+        <div class="kpi"><div class="small">投票筆數</div><div class="n">${data.stats.voteCount}</div></div>
+        <div class="kpi"><div class="small">投票人數</div><div class="n">${data.stats.voterCount}</div></div>
+      `;
+    }
+
+    async function renderGallery() {
+      const list = await APP.getAllArtworks();
+      const root = document.getElementById('gallery');
+      if (!list.length) {
+        root.innerHTML = '<div class="panel empty">目前尚未上傳作品，請先到作品管理頁新增作品。</div>';
+        return;
+      }
+      root.innerHTML = list.map((item, idx) => {
+        const voted = state.email ? APP.hasVoted(state.email, item.id) : false;
+        return `
+          <article class="card">
+            <div class="card-media"><img src="${item.image}" alt="${APP.escapeHtml(item.title)}"></div>
+            <div class="card-body">
+              <div class="meta"><span>編號 ${idx + 1}</span>${item.author ? `<span>作者：${APP.escapeHtml(item.author)}</span>` : ''}</div>
+              <h3>${APP.escapeHtml(item.title)}</h3>
+              <div class="desc">${APP.escapeHtml(item.description || '尚無作品說明')}</div>
+              <div class="score-grid">
+                <div class="score-item"><label>創意與主題契合度</label><select class="select" id="creative-${item.id}">${APP.scoreOptions(10)}</select></div>
+                <div class="score-item"><label>技術與編輯能力</label><select class="select" id="technical-${item.id}">${APP.scoreOptions(10)}</select></div>
+                <div class="score-item"><label>整體表現</label><select class="select" id="overall-${item.id}">${APP.scoreOptions(10)}</select></div>
+                <div class="score-item"><label>理念說明</label><select class="select" id="concept-${item.id}">${APP.scoreOptions(10)}</select></div>
+              </div>
+              <div class="actions" style="margin-top:16px; justify-content:space-between; align-items:center">
+                <span class="status ${voted ? 'ok' : 'warn'}">${voted ? '已投票' : '尚未投票'}</span>
+                <button class="btn ${voted ? 'btn-secondary' : 'btn-primary'}" ${voted ? 'disabled' : ''} onclick="voteArtwork('${item.id}')">${voted ? '已完成評分' : '送出評分'}</button>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    async function voteArtwork(id) {
+      if (!state.email) {
+        APP.toast('請先輸入 Email 登入。', 'error');
+        return;
+      }
+      try {
+        APP.submitVote({
+          email: state.email,
+          artworkId: id,
+          creative: document.getElementById(`creative-${id}`).value,
+          technical: document.getElementById(`technical-${id}`).value,
+          overall: document.getElementById(`overall-${id}`).value,
+          concept: document.getElementById(`concept-${id}`).value,
+        });
+        APP.toast('評分送出成功');
+        await renderGallery();
+        await renderStats();
+      } catch (err) {
+        APP.toast(err.message || '送出失敗', 'error');
+      }
+    }
+    window.voteArtwork = voteArtwork;
+
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+      const email = document.getElementById('email').value.trim();
+      if (!APP.validateEmail(email)) {
+        APP.toast('請輸入正確的 Email 格式。', 'error');
+        return;
+      }
+      state.email = APP.emailKey(email);
+      localStorage.setItem('ai_vote_current_email', state.email);
+      updateLoginState();
+      APP.toast('登入成功');
+      await renderGallery();
+    });
+
+    document.getElementById('clearLoginBtn').addEventListener('click', async () => {
+      state.email = '';
+      localStorage.removeItem('ai_vote_current_email');
+      updateLoginState();
+      await renderGallery();
+    });
+
+    updateLoginState();
+    renderStats();
+    renderGallery();
+  </script>
+</body>
+</html>

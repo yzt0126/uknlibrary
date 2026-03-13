@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>後台統計已整合｜未來畫境之AI創作大賽</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="nav"></div>
+  <main class="container">
+    <section class="hero">
+      <div class="panel center">
+        <div class="status warn">● 已整合至管理入口</div>
+        <h1 class="title-xl">後台統計已收進管理端</h1>
+        <p class="subtitle">請先登入管理入口，再於管理端內切換到「後台統計」。未登入管理者將無法查看統計內容。</p>
+        <div class="actions" style="justify-content:center; margin-top:18px">
+          <a class="btn btn-primary" href="admin.html">前往管理入口</a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer>新版已將作品管理與後台統計集中於同一個管理端。</footer>
+  <script src="app.js"></script>
+  <script>
+    document.getElementById('nav').innerHTML = APP.nav('admin');
+    APP.setEventTitle();
+    if (APP.isAdminAuthed()) {
+      sessionStorage.setItem('ai_vote_admin_tab', 'stats');
+      location.replace('admin.html');
+    }
+  </script>
+</body>
+</html>
