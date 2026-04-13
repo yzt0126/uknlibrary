@@ -24,7 +24,7 @@
         </div>
         <div class="panel soft" id="authBox">
           <h2 class="section-title">管理員登入</h2>
-          <input class="input" id="adminPin" type="password" placeholder="請輸入管理密碼，預設為 123456" />
+          <input class="input" id="adminPin" type="password" placeholder="請輸入管理密碼" />
           <div class="actions" style="margin-top:14px">
             <button class="btn btn-primary" id="authBtn">登入管理端</button>
           </div>
@@ -164,7 +164,7 @@
 
     let authed = APP.isAdminAuthed();
     let previewData = '';
-    let currentTab = sessionStorage.getItem('ai_vote_admin_tab') || 'manage';
+      let currentTab = localStorage.getItem('ai_vote_admin_tab') || 'manage';
 
     function renderSettings() {
       const s = APP.getSettings();
@@ -175,7 +175,7 @@
 
     function setTab(tab) {
       currentTab = tab;
-      sessionStorage.setItem('ai_vote_admin_tab', tab);
+        localStorage.setItem('ai_vote_admin_tab', tab);
       document.getElementById('manageTab').classList.toggle('hidden', tab !== 'manage');
       document.getElementById('statsTab').classList.toggle('hidden', tab !== 'stats');
       document.getElementById('tabManageBtn').classList.toggle('btn-primary', tab === 'manage');
@@ -218,14 +218,14 @@
         return;
       }
       authed = true;
-      sessionStorage.setItem('ai_vote_admin_ok', '1');
+      localStorage.setItem('ai_vote_admin_ok', '1');
       APP.toast('已進入管理端');
       updateAuthView();
     });
 
     document.getElementById('logoutBtn').addEventListener('click', () => {
-      sessionStorage.removeItem('ai_vote_admin_ok');
-      sessionStorage.removeItem('ai_vote_admin_tab');
+        localStorage.removeItem('ai_vote_admin_ok');
+        localStorage.removeItem('ai_vote_admin_tab');
       authed = false;
       currentTab = 'manage';
       document.getElementById('adminPin').value = '';
